@@ -1,0 +1,556 @@
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --fundo: #0f1115;
+  --painel: #171a21;
+  --painel-claro: #20242d;
+
+  --texto: #f2f2f2;
+  --texto-secundario: #9fa6b2;
+
+  --borda: #303641;
+
+  --destaque: #7c5cff;
+  --destaque-hover: #927aff;
+
+  --verde: #48c78e;
+  --vermelho: #e05d68;
+}
+
+
+body {
+  margin: 0;
+
+  background: var(--fundo);
+  color: var(--texto);
+
+  font-family:
+    Inter,
+    Arial,
+    Helvetica,
+    sans-serif;
+}
+
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+
+button {
+  min-height: 44px;
+}
+
+
+.container {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+
+  padding: 24px;
+}
+
+
+.header {
+  margin-bottom: 30px;
+}
+
+
+.header h1 {
+  margin: 0 0 8px;
+
+  font-size: 32px;
+}
+
+
+.header p {
+  margin: 0;
+
+  color: var(--texto-secundario);
+}
+
+
+/* =========================
+   UPLOAD
+========================= */
+
+.upload-area {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 16px;
+}
+
+
+.upload-box {
+  display: flex;
+  flex-direction: column;
+
+  gap: 10px;
+
+  padding: 20px;
+
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+
+  background: var(--painel);
+}
+
+
+.upload-box label {
+  font-weight: bold;
+}
+
+
+.upload-box span {
+  color: var(--texto-secundario);
+
+  font-size: 14px;
+
+  overflow-wrap: anywhere;
+}
+
+
+input[type="file"] {
+  width: 100%;
+}
+
+
+/* =========================
+   BOTÕES
+========================= */
+
+button {
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+
+  padding: 10px 18px;
+
+  background: var(--painel-claro);
+  color: var(--texto);
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    transform 0.1s;
+}
+
+
+button:hover {
+  border-color: #555d6b;
+}
+
+
+button:active {
+  transform: scale(0.98);
+}
+
+
+button:disabled {
+  opacity: 0.4;
+
+  cursor: not-allowed;
+}
+
+
+.botao-principal {
+  background: var(--destaque);
+
+  border-color: var(--destaque);
+}
+
+
+.botao-principal:hover {
+  background: var(--destaque-hover);
+}
+
+
+.botao-secundario {
+  background: transparent;
+}
+
+
+#botaoComecar {
+  grid-column: 1 / -1;
+
+  font-size: 17px;
+}
+
+
+/* =========================
+   COMPARADOR
+========================= */
+
+.comparador {
+  margin-top: 30px;
+}
+
+
+.escondido {
+  display: none !important;
+}
+
+
+.barra-superior {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  margin-bottom: 20px;
+}
+
+
+.barra-superior > div {
+  flex: 1;
+}
+
+
+.barra-progresso {
+  height: 6px;
+
+  margin-top: 8px;
+
+  overflow: hidden;
+
+  border-radius: 10px;
+
+  background: var(--painel-claro);
+}
+
+
+#progresso {
+  width: 0%;
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: var(--destaque);
+
+  transition: width 0.2s;
+}
+
+
+/* =========================
+   TEXTOS
+========================= */
+
+.textos {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 16px;
+}
+
+
+.card-texto {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  border: 2px solid var(--borda);
+  border-radius: 14px;
+
+  overflow: hidden;
+
+  background: var(--painel);
+
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+
+.titulo-card {
+  padding: 12px 16px;
+
+  border-bottom: 1px solid var(--borda);
+
+  font-weight: bold;
+
+  background: var(--painel-claro);
+}
+
+
+.conteudo-texto {
+  flex: 1;
+
+  min-height: 220px;
+
+  padding: 20px;
+
+  font-size: 17px;
+  line-height: 1.65;
+
+  white-space: pre-wrap;
+
+  overflow-wrap: anywhere;
+}
+
+
+.botao-escolha {
+  margin: 0 16px 16px;
+}
+
+
+.card-texto.selecionado {
+  border-color: var(--destaque);
+}
+
+
+.card-texto.selecionado .botao-escolha {
+  background: var(--destaque);
+
+  border-color: var(--destaque);
+}
+
+
+/* =========================
+   OPÇÕES
+========================= */
+
+.opcoes-extras {
+  display: flex;
+
+  justify-content: center;
+
+  flex-wrap: wrap;
+
+  gap: 10px;
+
+  margin-top: 16px;
+}
+
+
+.opcoes-extras .selecionado {
+  border-color: var(--destaque);
+
+  background: var(--destaque);
+}
+
+
+/* =========================
+   EDITOR
+========================= */
+
+.editor-area {
+  margin-top: 20px;
+
+  padding: 18px;
+
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+
+  background: var(--painel);
+}
+
+
+.editor-area label {
+  display: block;
+
+  margin-bottom: 10px;
+
+  font-weight: bold;
+}
+
+
+.editor-area textarea {
+  width: 100%;
+  min-height: 180px;
+
+  resize: vertical;
+
+  padding: 14px;
+
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+
+  outline: none;
+
+  background: var(--fundo);
+  color: var(--texto);
+
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+
+.editor-area textarea:focus {
+  border-color: var(--destaque);
+}
+
+
+.editor-area button {
+  width: 100%;
+
+  margin-top: 10px;
+}
+
+
+/* =========================
+   NAVEGAÇÃO
+========================= */
+
+.navegacao {
+  display: flex;
+
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin-top: 24px;
+}
+
+
+.navegacao button {
+  min-width: 140px;
+}
+
+
+/* =========================
+   TEXTO C
+========================= */
+
+.resultado {
+  margin-top: 40px;
+
+  padding-top: 30px;
+
+  border-top: 1px solid var(--borda);
+}
+
+
+.resultado-topo {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  margin-bottom: 12px;
+}
+
+
+.resultado-topo h2 {
+  margin: 0;
+}
+
+
+#quantidadeEscolhida {
+  color: var(--texto-secundario);
+
+  font-size: 14px;
+}
+
+
+#textoC {
+  width: 100%;
+  min-height: 350px;
+
+  resize: vertical;
+
+  padding: 18px;
+
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+
+  outline: none;
+
+  background: var(--painel);
+  color: var(--texto);
+
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+
+.acoes-resultado {
+  display: flex;
+
+  justify-content: flex-end;
+
+  margin-top: 12px;
+}
+
+
+/* =========================
+   CELULAR
+========================= */
+
+@media (max-width: 700px) {
+
+  .container {
+    padding: 16px;
+  }
+
+
+  .header h1 {
+    font-size: 26px;
+  }
+
+
+  .upload-area {
+    grid-template-columns: 1fr;
+  }
+
+
+  #botaoComecar {
+    grid-column: auto;
+  }
+
+
+  .textos {
+    grid-template-columns: 1fr;
+  }
+
+
+  .conteudo-texto {
+    min-height: auto;
+
+    font-size: 16px;
+  }
+
+
+  .barra-superior {
+    align-items: flex-start;
+  }
+
+
+  .navegacao {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+  }
+
+
+  .navegacao button {
+    min-width: 0;
+  }
+
+
+  .resultado-topo {
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    gap: 6px;
+  }
+
+
+  .acoes-resultado button {
+    width: 100%;
+  }
+
+}
