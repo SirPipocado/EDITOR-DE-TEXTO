@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Montador de Texto</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <main class="container">
+
+    <header class="header">
+      <h1>Montador de Texto</h1>
+      <p>Compare duas versões e monte uma terceira com os trechos que preferir.</p>
+    </header>
+
+
+    <!-- ARQUIVOS -->
+    <section class="upload-area">
+
+      <div class="upload-box">
+        <label for="arquivoA">Texto A</label>
+
+        <input
+          type="file"
+          id="arquivoA"
+          accept=".txt"
+        >
+
+        <span id="nomeArquivoA">
+          Nenhum arquivo selecionado
+        </span>
+      </div>
+
+
+      <div class="upload-box">
+        <label for="arquivoB">Texto B</label>
+
+        <input
+          type="file"
+          id="arquivoB"
+          accept=".txt"
+        >
+
+        <span id="nomeArquivoB">
+          Nenhum arquivo selecionado
+        </span>
+      </div>
+
+
+      <button
+        id="botaoComecar"
+        class="botao-principal"
+        disabled
+      >
+        Começar comparação
+      </button>
+
+    </section>
+
+
+    <!-- COMPARAÇÃO -->
+    <section
+      id="comparador"
+      class="comparador escondido"
+    >
+
+      <div class="barra-superior">
+
+        <div>
+          <strong id="contador">
+            Trecho 1 de 1
+          </strong>
+
+          <div class="barra-progresso">
+            <div id="progresso"></div>
+          </div>
+        </div>
+
+
+        <button
+          id="botaoReiniciar"
+          class="botao-secundario"
+        >
+          Reiniciar
+        </button>
+
+      </div>
+
+
+      <div class="textos">
+
+        <!-- TEXTO A -->
+        <article
+          id="cardA"
+          class="card-texto"
+        >
+
+          <div class="titulo-card">
+            Texto A
+          </div>
+
+          <div
+            id="textoA"
+            class="conteudo-texto"
+          ></div>
+
+          <button
+            id="usarA"
+            class="botao-escolha"
+          >
+            Usar A
+          </button>
+
+        </article>
+
+
+        <!-- TEXTO B -->
+        <article
+          id="cardB"
+          class="card-texto"
+        >
+
+          <div class="titulo-card">
+            Texto B
+          </div>
+
+          <div
+            id="textoB"
+            class="conteudo-texto"
+          ></div>
+
+          <button
+            id="usarB"
+            class="botao-escolha"
+          >
+            Usar B
+          </button>
+
+        </article>
+
+      </div>
+
+
+      <!-- OUTRAS OPÇÕES -->
+      <div class="opcoes-extras">
+
+        <button id="usarAmbos">
+          Ambos
+        </button>
+
+        <button id="editarTrecho">
+          Editar
+        </button>
+
+        <button id="ignorarTrecho">
+          Ignorar
+        </button>
+
+      </div>
+
+
+      <!-- EDITOR -->
+      <div
+        id="editorArea"
+        class="editor-area escondido"
+      >
+
+        <label for="editorTexto">
+          Versão personalizada
+        </label>
+
+        <textarea
+          id="editorTexto"
+          placeholder="Edite ou escreva sua própria versão deste trecho..."
+        ></textarea>
+
+        <button
+          id="salvarEdicao"
+          class="botao-principal"
+        >
+          Usar esta versão
+        </button>
+
+      </div>
+
+
+      <!-- NAVEGAÇÃO -->
+      <div class="navegacao">
+
+        <button
+          id="anterior"
+          class="botao-secundario"
+        >
+          ← Anterior
+        </button>
+
+        <button
+          id="proximo"
+          class="botao-principal"
+        >
+          Próximo →
+        </button>
+
+      </div>
+
+
+      <!-- TEXTO C -->
+      <section class="resultado">
+
+        <div class="resultado-topo">
+
+          <h2>Texto C</h2>
+
+          <span id="quantidadeEscolhida">
+            0 trechos escolhidos
+          </span>
+
+        </div>
+
+
+        <textarea
+          id="textoC"
+          readonly
+          placeholder="O texto final aparecerá aqui conforme você fizer suas escolhas."
+        ></textarea>
+
+
+        <div class="acoes-resultado">
+
+          <button
+            id="baixarTxt"
+            class="botao-principal"
+          >
+            Baixar .txt
+          </button>
+
+        </div>
+
+      </section>
+
+    </section>
+
+  </main>
+
+
+  <script src="script.js"></script>
+
+</body>
+</html>
