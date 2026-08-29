@@ -121,11 +121,732 @@ botaoComecar.addEventListener("click", async () => {
     blocosA = dividirEmBlocos(conteudoA);
     blocosB = dividirEmBlocos(conteudoB);
 
-    criarComparacoes();
+function normalizarParaComparacao(texto) {
 
-    indiceAtual = 0;
+  return texto
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
-    comparador.classList.remove("escondido");
+}
+
+
+const palavrasIgnoradas = new Set([
+  "a", "o", "as", "os",
+  "um", "uma", "uns", "umas",
+  "de", "da", "do", "das", "dos",
+  "e", "ou",
+  "em", "no", "na", "nos", "nas",
+  "para", "por", "com", "sem",
+  "que", "se",
+  "ele", "ela", "eles", "elas",
+  "eu", "tu", "voce", "voces",
+  "me", "te", "lhe", "lhes",
+  "meu", "minha", "seu", "sua",
+  "mais", "menos",
+  "ja", "ainda",
+  "como", "quando", "onde",
+  "foi", "era", "ser", "estar",
+  "tem", "tinha"
+]);
+
+
+function obterPalavrasRelevantes(texto) {
+
+  const normalizado =
+    normalizarParaComparacao(texto);
+
+  if (!normalizado) {
+    return [];
+  }
+
+  return normalizado
+    .split(" ")
+    .filter(palavra => {
+
+      if (!palavra) {
+        return false;
+      }
+
+      if (palavrasIgnoradas.has(palavra)) {
+        return false;
+      }
+
+      return palavra.length > 1;
+
+    });
+
+}
+
+
+function similaridadeTexto(texto1, texto2) {
+
+  if (!texto1 || !texto2) {
+    return 0;
+  }
+
+
+  const normalizado1 =
+    normalizarParaComparacao(texto1);
+
+  const normalizado2 =
+    normalizarParaComparacao(texto2);
+
+
+  if (
+    normalizado1 === normalizado2
+  ) {
+    return 1;
+  }
+
+
+  const palavras1 =
+    obterPalavrasRelevantes(texto1);
+
+  const palavras2 =
+    obterPalavrasRelevantes(texto2);
+
+
+  if (
+    palavras1.length === 0 ||
+    palavras2.length === 0
+  ) {
+
+    return 0;
+
+  }
+
+
+  const conjunto1 =
+    new Set(palavras1);
+
+  const conjunto2 =
+    new Set(palavras2);
+
+
+  let palavrasIguais = 0;
+
+
+  for (const palavra of conjunto1) {
+
+    if (conjunto2.has(palavra)) {
+      palavrasIguais++;
+    }
+
+  }
+
+
+  const dice =
+    (2 * palavrasIguais) /
+    (conjunto1.size + conjunto2.size);
+
+
+  /*
+    Também consideramos o tamanho.
+
+    Não serve para decidir sozinho,
+    mas ajuda um pouco quando os
+    parágrafos foram reescritos.
+  */
+
+  const maiorTamanho =
+    Math.max(
+      normalizado1.length,
+      normalizado2.length
+    );
+
+
+  const menorTamanho =
+    Math.min(
+      normalizado1.length,
+      normalizado2.length
+    );
+
+
+  const proporcaoTamanho =
+    maiorTamanho > 0
+      ? menorTamanho / maiorTamanho
+      : 0;
+
+
+  return (
+    dice * 0.9 +
+    proporcaoTamanho * 0.1
+  );
+
+}
+
+
+function juntarBlocos(
+  blocos,
+  inicio,
+  quantidade
+) {
+
+  return blocos
+    .slice(
+      inicio,
+      inicio + quantidade
+    )
+    .join("\n\n");
+
+}
+
+
+function adicionarComparacao(
+  textoA,
+  textoB
+) {
+
+  comparacoes.push({
+
+    a: textoA || "",
+    b: textoB || "",
+
+    escolha: null,
+    textoFinal: ""
+
+  });
+
+}
+
+
+function criarComparacoes() {
+
+  comparacoes = [];
+
+
+  let indiceA = 0;
+  let indiceB = 0;
+
+
+  /*
+    Quantos parágrafos para frente
+    o programa pode procurar quando
+    percebe que os textos saíram
+    de sincronia.
+  */
+
+  const LIMITE_BUSCA = 6;
+
+
+  /*
+    Similaridade mínima para considerar
+    que encontramos novamente o mesmo
+    ponto nos dois textos.
+  */
+
+  const LIMIAR_REENCONTRO = 0.24;
+
+
+  /*
+    A nova combinação precisa ser
+    claramente melhor que a comparação
+    atual para deslocarmos o alinhamento.
+  */
+
+  const VANTAGEM_MINIMA = 0.08;
+
+
+  while (
+    indiceA < blocosA.length ||
+    indiceB < blocosB.length
+  ) {
+
+
+    /*
+      Acabou o Texto A.
+    */
+
+    if (
+      indiceA >= blocosA.length
+    ) {
+
+      adicionarComparacao(
+        "",
+        blocosB[indiceB]
+      );
+
+      indiceB++;
+
+      continue;
+
+    }
+
+
+    /*
+      Acabou o Texto B.
+    */
+
+    if (
+      indiceB >= blocosB.length
+    ) {
+
+      adicionarComparacao(
+        blocosA[indiceA],
+        ""
+      );
+
+      indiceA++;
+
+      continue;
+
+    }
+
+
+    const atualA =
+      blocosA[indiceA];
+
+    const atualB =
+      blocosB[indiceB];
+
+
+    const similaridadeAtual =
+      similaridadeTexto(
+        atualA,
+        atualB
+      );
+
+
+    /*
+      ==========================
+      PARÁGRAFOS DIVIDIDOS
+      ==========================
+
+      Exemplo:
+
+      A:
+      [parágrafo grande]
+
+      B:
+      [metade]
+      [outra metade]
+
+      Testamos até 3 parágrafos.
+    */
+
+
+    let melhorDivisaoB = {
+      quantidade: 1,
+      similaridade:
+        similaridadeAtual
+    };
+
+
+    for (
+      let quantidade = 2;
+      quantidade <= 3;
+      quantidade++
+    ) {
+
+      if (
+        indiceB + quantidade >
+        blocosB.length
+      ) {
+        break;
+      }
+
+
+      const combinadoB =
+        juntarBlocos(
+          blocosB,
+          indiceB,
+          quantidade
+        );
+
+
+      const score =
+        similaridadeTexto(
+          atualA,
+          combinadoB
+        );
+
+
+      if (
+        score >
+        melhorDivisaoB.similaridade
+      ) {
+
+        melhorDivisaoB = {
+          quantidade,
+          similaridade: score
+        };
+
+      }
+
+    }
+
+
+    /*
+      O contrário:
+
+      A tem 2 ou 3 parágrafos
+      equivalentes a 1 do B.
+    */
+
+    let melhorDivisaoA = {
+      quantidade: 1,
+      similaridade:
+        similaridadeAtual
+    };
+
+
+    for (
+      let quantidade = 2;
+      quantidade <= 3;
+      quantidade++
+    ) {
+
+      if (
+        indiceA + quantidade >
+        blocosA.length
+      ) {
+        break;
+      }
+
+
+      const combinadoA =
+        juntarBlocos(
+          blocosA,
+          indiceA,
+          quantidade
+        );
+
+
+      const score =
+        similaridadeTexto(
+          combinadoA,
+          atualB
+        );
+
+
+      if (
+        score >
+        melhorDivisaoA.similaridade
+      ) {
+
+        melhorDivisaoA = {
+          quantidade,
+          similaridade: score
+        };
+
+      }
+
+    }
+
+
+    /*
+      Só juntamos os parágrafos
+      se a melhora for realmente
+      significativa.
+    */
+
+    const usarDivisaoB =
+      melhorDivisaoB.quantidade > 1 &&
+      melhorDivisaoB.similaridade >= 0.28 &&
+      melhorDivisaoB.similaridade >
+        similaridadeAtual + 0.1;
+
+
+    const usarDivisaoA =
+      melhorDivisaoA.quantidade > 1 &&
+      melhorDivisaoA.similaridade >= 0.28 &&
+      melhorDivisaoA.similaridade >
+        similaridadeAtual + 0.1;
+
+
+    if (
+      usarDivisaoA ||
+      usarDivisaoB
+    ) {
+
+
+      if (
+        usarDivisaoB &&
+        (
+          !usarDivisaoA ||
+          melhorDivisaoB.similaridade >=
+          melhorDivisaoA.similaridade
+        )
+      ) {
+
+        const combinadoB =
+          juntarBlocos(
+            blocosB,
+            indiceB,
+            melhorDivisaoB.quantidade
+          );
+
+
+        adicionarComparacao(
+          atualA,
+          combinadoB
+        );
+
+
+        indiceA++;
+
+        indiceB +=
+          melhorDivisaoB.quantidade;
+
+        continue;
+
+      }
+
+
+      const combinadoA =
+        juntarBlocos(
+          blocosA,
+          indiceA,
+          melhorDivisaoA.quantidade
+        );
+
+
+      adicionarComparacao(
+        combinadoA,
+        atualB
+      );
+
+
+      indiceA +=
+        melhorDivisaoA.quantidade;
+
+      indiceB++;
+
+      continue;
+
+    }
+
+
+    /*
+      ==========================
+      PROCURA PARA FRENTE
+      ==========================
+    */
+
+
+    let melhorSaltoB = {
+      distancia: 0,
+      similaridade:
+        similaridadeAtual
+    };
+
+
+    /*
+      Mantemos A parado e procuramos
+      esse parágrafo mais para frente
+      no Texto B.
+
+      Isso indica que B ganhou
+      um parágrafo.
+    */
+
+    for (
+      let distancia = 1;
+      distancia <= LIMITE_BUSCA;
+      distancia++
+    ) {
+
+      const novoIndiceB =
+        indiceB + distancia;
+
+
+      if (
+        novoIndiceB >=
+        blocosB.length
+      ) {
+        break;
+      }
+
+
+      const score =
+        similaridadeTexto(
+          atualA,
+          blocosB[novoIndiceB]
+        );
+
+
+      if (
+        score >
+        melhorSaltoB.similaridade
+      ) {
+
+        melhorSaltoB = {
+          distancia,
+          similaridade: score
+        };
+
+      }
+
+    }
+
+
+    let melhorSaltoA = {
+      distancia: 0,
+      similaridade:
+        similaridadeAtual
+    };
+
+
+    /*
+      Mantemos B parado e procuramos
+      esse parágrafo mais para frente
+      no Texto A.
+
+      Isso indica que A ganhou
+      um parágrafo.
+    */
+
+    for (
+      let distancia = 1;
+      distancia <= LIMITE_BUSCA;
+      distancia++
+    ) {
+
+      const novoIndiceA =
+        indiceA + distancia;
+
+
+      if (
+        novoIndiceA >=
+        blocosA.length
+      ) {
+        break;
+      }
+
+
+      const score =
+        similaridadeTexto(
+          blocosA[novoIndiceA],
+          atualB
+        );
+
+
+      if (
+        score >
+        melhorSaltoA.similaridade
+      ) {
+
+        melhorSaltoA = {
+          distancia,
+          similaridade: score
+        };
+
+      }
+
+    }
+
+
+    const saltoBValido =
+      melhorSaltoB.distancia > 0 &&
+      melhorSaltoB.similaridade >=
+        LIMIAR_REENCONTRO &&
+      melhorSaltoB.similaridade >=
+        similaridadeAtual +
+        VANTAGEM_MINIMA;
+
+
+    const saltoAValido =
+      melhorSaltoA.distancia > 0 &&
+      melhorSaltoA.similaridade >=
+        LIMIAR_REENCONTRO &&
+      melhorSaltoA.similaridade >=
+        similaridadeAtual +
+        VANTAGEM_MINIMA;
+
+
+    /*
+      B ganhou conteúdo.
+
+      Colocamos esses parágrafos como:
+
+      [sem correspondente] ↔ B
+    */
+
+    if (
+      saltoBValido &&
+      (
+        !saltoAValido ||
+        melhorSaltoB.similaridade >
+        melhorSaltoA.similaridade
+      )
+    ) {
+
+      for (
+        let i = 0;
+        i < melhorSaltoB.distancia;
+        i++
+      ) {
+
+        adicionarComparacao(
+          "",
+          blocosB[indiceB]
+        );
+
+        indiceB++;
+
+      }
+
+
+      continue;
+
+    }
+
+
+    /*
+      A ganhou conteúdo.
+    */
+
+    if (
+      saltoAValido
+    ) {
+
+      for (
+        let i = 0;
+        i < melhorSaltoA.distancia;
+        i++
+      ) {
+
+        adicionarComparacao(
+          blocosA[indiceA],
+          ""
+        );
+
+        indiceA++;
+
+      }
+
+
+      continue;
+
+    }
+
+
+    /*
+      Não encontramos nenhum indício
+      forte de deslocamento.
+
+      Consideramos então que os dois
+      parágrafos correspondem entre si,
+      mesmo que tenham sido bastante
+      reescritos.
+    */
+
+    adicionarComparacao(
+      atualA,
+      atualB
+    );
+
+
+    indiceA++;
+    indiceB++;
+
+  }
+
+}
 
     atualizarTela();
 
