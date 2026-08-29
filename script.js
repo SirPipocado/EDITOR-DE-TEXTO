@@ -33,6 +33,7 @@ const anterior = document.getElementById("anterior");
 const proximo = document.getElementById("proximo");
 
 const textoC = document.getElementById("textoC");
+
 const quantidadeEscolhida = document.getElementById(
   "quantidadeEscolhida"
 );
@@ -52,25 +53,10 @@ let indiceAtual = 0;
 
 
 /*
-Cada item de comparacoes:
-
-{
-  a: "texto do A",
-  b: "texto do B",
-
-  escolha: null,
-  textoFinal: ""
-}
-
-escolha pode ser:
-
-"a"
-"b"
-"ambos"
-"editar"
-"ignorar"
+========================================
+ARQUIVOS
+========================================
 */
-
 
 arquivoAInput.addEventListener("change", () => {
 
@@ -102,10 +88,17 @@ arquivoBInput.addEventListener("change", () => {
 
 function verificarArquivos() {
 
-  botaoComecar.disabled = !(arquivoA && arquivoB);
+  botaoComecar.disabled =
+    !(arquivoA && arquivoB);
 
 }
 
+
+/*
+========================================
+COMEÇAR
+========================================
+*/
 
 botaoComecar.addEventListener("click", async () => {
 
@@ -115,53 +108,264 @@ botaoComecar.addEventListener("click", async () => {
 
   try {
 
-    const conteudoA = await lerArquivo(arquivoA);
-    const conteudoB = await lerArquivo(arquivoB);
+    const conteudoA =
+      await lerArquivo(arquivoA);
 
-    blocosA = dividirEmBlocos(conteudoA);
-    blocosB = dividirEmBlocos(conteudoB);
+    const conteudoB =
+      await lerArquivo(arquivoB);
+
+
+    blocosA =
+      dividirEmBlocos(conteudoA);
+
+    blocosB =
+      dividirEmBlocos(conteudoB);
+
+
+    criarComparacoes();
+
+
+    if (!comparacoes.length) {
+
+      alert(
+        "Não foi encontrado nenhum texto para comparar."
+      );
+
+      return;
+
+    }
+
+
+    indiceAtual = 0;
+
+    comparador.classList.remove(
+      "escondido"
+    );
+
+    atualizarTela();
+
+
+    comparador.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+
+  } catch (erro) {
+
+    console.error(erro);
+
+    alert(
+      "Não foi possível ler um dos arquivos."
+    );
+
+  }
+
+});
+
+
+/*
+========================================
+LEITURA
+========================================
+*/
+
+function lerArquivo(arquivo) {
+
+  return new Promise(
+    (resolve, reject) => {
+
+      const leitor =
+        new FileReader();
+
+
+      leitor.onload = () => {
+
+        resolve(
+          leitor.result
+        );
+
+      };
+
+
+      leitor.onerror = () => {
+
+        reject(
+          leitor.error
+        );
+
+      };
+
+
+      leitor.readAsText(
+        arquivo,
+        "UTF-8"
+      );
+
+    }
+  );
+
+}
+
+
+/*
+========================================
+DIVISÃO EM PARÁGRAFOS
+========================================
+*/
+
+function dividirEmBlocos(texto) {
+
+  const textoNormalizado =
+    texto
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n")
+      .trim();
+
+
+  if (!textoNormalizado) {
+    return [];
+  }
+
+
+  return textoNormalizado
+    .split(/\n\s*\n+/)
+    .map(
+      bloco => bloco.trim()
+    )
+    .filter(Boolean);
+
+}
+
+
+/*
+========================================
+NORMALIZAÇÃO PARA COMPARAÇÃO
+========================================
+*/
 
 function normalizarParaComparacao(texto) {
 
   return texto
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .replace(/\s+/g, " ")
+    .replace(
+      /[\u0300-\u036f]/g,
+      ""
+    )
+    .replace(
+      /[^\p{L}\p{N}\s]/gu,
+      " "
+    )
+    .replace(
+      /\s+/g,
+      " "
+    )
     .trim();
 
 }
 
 
-const palavrasIgnoradas = new Set([
-  "a", "o", "as", "os",
-  "um", "uma", "uns", "umas",
-  "de", "da", "do", "das", "dos",
-  "e", "ou",
-  "em", "no", "na", "nos", "nas",
-  "para", "por", "com", "sem",
-  "que", "se",
-  "ele", "ela", "eles", "elas",
-  "eu", "tu", "voce", "voces",
-  "me", "te", "lhe", "lhes",
-  "meu", "minha", "seu", "sua",
-  "mais", "menos",
-  "ja", "ainda",
-  "como", "quando", "onde",
-  "foi", "era", "ser", "estar",
-  "tem", "tinha"
-]);
+/*
+Palavras muito comuns que atrapalham
+na hora de calcular semelhança.
+*/
 
+const palavrasIgnoradas =
+  new Set([
+    "a",
+    "o",
+    "as",
+    "os",
+
+    "um",
+    "uma",
+    "uns",
+    "umas",
+
+    "de",
+    "da",
+    "do",
+    "das",
+    "dos",
+
+    "e",
+    "ou",
+
+    "em",
+    "no",
+    "na",
+    "nos",
+    "nas",
+
+    "para",
+    "por",
+    "com",
+    "sem",
+
+    "que",
+    "se",
+
+    "ele",
+    "ela",
+    "eles",
+    "elas",
+
+    "eu",
+    "tu",
+    "voce",
+    "voces",
+
+    "me",
+    "te",
+    "lhe",
+    "lhes",
+
+    "meu",
+    "minha",
+    "meus",
+    "minhas",
+
+    "seu",
+    "sua",
+    "seus",
+    "suas",
+
+    "mais",
+    "menos",
+
+    "ja",
+    "ainda",
+
+    "como",
+    "quando",
+    "onde",
+
+    "foi",
+    "era",
+    "ser",
+    "estar",
+
+    "tem",
+    "tinha"
+  ]);
+
+
+/*
+========================================
+PALAVRAS RELEVANTES
+========================================
+*/
 
 function obterPalavrasRelevantes(texto) {
 
   const normalizado =
     normalizarParaComparacao(texto);
 
+
   if (!normalizado) {
     return [];
   }
+
 
   return normalizado
     .split(" ")
@@ -171,9 +375,17 @@ function obterPalavrasRelevantes(texto) {
         return false;
       }
 
-      if (palavrasIgnoradas.has(palavra)) {
+
+      if (
+        palavrasIgnoradas.has(
+          palavra
+        )
+      ) {
+
         return false;
+
       }
+
 
       return palavra.length > 1;
 
@@ -182,32 +394,57 @@ function obterPalavrasRelevantes(texto) {
 }
 
 
-function similaridadeTexto(texto1, texto2) {
+/*
+========================================
+SIMILARIDADE
+========================================
+*/
 
-  if (!texto1 || !texto2) {
+function similaridadeTexto(
+  texto1,
+  texto2
+) {
+
+  if (
+    !texto1 ||
+    !texto2
+  ) {
+
     return 0;
+
   }
 
 
   const normalizado1 =
-    normalizarParaComparacao(texto1);
+    normalizarParaComparacao(
+      texto1
+    );
 
   const normalizado2 =
-    normalizarParaComparacao(texto2);
+    normalizarParaComparacao(
+      texto2
+    );
 
 
   if (
-    normalizado1 === normalizado2
+    normalizado1 ===
+    normalizado2
   ) {
+
     return 1;
+
   }
 
 
   const palavras1 =
-    obterPalavrasRelevantes(texto1);
+    obterPalavrasRelevantes(
+      texto1
+    );
 
   const palavras2 =
-    obterPalavrasRelevantes(texto2);
+    obterPalavrasRelevantes(
+      texto2
+    );
 
 
   if (
@@ -221,36 +458,46 @@ function similaridadeTexto(texto1, texto2) {
 
 
   const conjunto1 =
-    new Set(palavras1);
+    new Set(
+      palavras1
+    );
 
   const conjunto2 =
-    new Set(palavras2);
+    new Set(
+      palavras2
+    );
 
 
   let palavrasIguais = 0;
 
 
-  for (const palavra of conjunto1) {
+  for (
+    const palavra of conjunto1
+  ) {
 
-    if (conjunto2.has(palavra)) {
+    if (
+      conjunto2.has(
+        palavra
+      )
+    ) {
+
       palavrasIguais++;
+
     }
 
   }
 
 
   const dice =
-    (2 * palavrasIguais) /
-    (conjunto1.size + conjunto2.size);
+    (
+      2 *
+      palavrasIguais
+    ) /
+    (
+      conjunto1.size +
+      conjunto2.size
+    );
 
-
-  /*
-    Também consideramos o tamanho.
-
-    Não serve para decidir sozinho,
-    mas ajuda um pouco quando os
-    parágrafos foram reescritos.
-  */
 
   const maiorTamanho =
     Math.max(
@@ -268,7 +515,8 @@ function similaridadeTexto(texto1, texto2) {
 
   const proporcaoTamanho =
     maiorTamanho > 0
-      ? menorTamanho / maiorTamanho
+      ? menorTamanho /
+        maiorTamanho
       : 0;
 
 
@@ -279,6 +527,12 @@ function similaridadeTexto(texto1, texto2) {
 
 }
 
+
+/*
+========================================
+UTILIDADES DO ALINHAMENTO
+========================================
+*/
 
 function juntarBlocos(
   blocos,
@@ -303,16 +557,28 @@ function adicionarComparacao(
 
   comparacoes.push({
 
-    a: textoA || "",
-    b: textoB || "",
+    a:
+      textoA || "",
 
-    escolha: null,
-    textoFinal: ""
+    b:
+      textoB || "",
+
+    escolha:
+      null,
+
+    textoFinal:
+      ""
 
   });
 
 }
 
+
+/*
+========================================
+ALINHAMENTO DOS TEXTOS
+========================================
+*/
 
 function criarComparacoes() {
 
@@ -324,28 +590,24 @@ function criarComparacoes() {
 
 
   /*
-    Quantos parágrafos para frente
-    o programa pode procurar quando
-    percebe que os textos saíram
-    de sincronia.
+  Quantos parágrafos para frente
+  ele pode procurar.
   */
 
   const LIMITE_BUSCA = 6;
 
 
   /*
-    Similaridade mínima para considerar
-    que encontramos novamente o mesmo
-    ponto nos dois textos.
+  Similaridade mínima para considerar
+  que reencontrou o mesmo trecho.
   */
 
   const LIMIAR_REENCONTRO = 0.24;
 
 
   /*
-    A nova combinação precisa ser
-    claramente melhor que a comparação
-    atual para deslocarmos o alinhamento.
+  A comparação futura precisa ser
+  claramente melhor que a atual.
   */
 
   const VANTAGEM_MINIMA = 0.08;
@@ -358,11 +620,14 @@ function criarComparacoes() {
 
 
     /*
-      Acabou o Texto A.
+    ================================
+    A ACABOU
+    ================================
     */
 
     if (
-      indiceA >= blocosA.length
+      indiceA >=
+      blocosA.length
     ) {
 
       adicionarComparacao(
@@ -378,11 +643,14 @@ function criarComparacoes() {
 
 
     /*
-      Acabou o Texto B.
+    ================================
+    B ACABOU
+    ================================
     */
 
     if (
-      indiceB >= blocosB.length
+      indiceB >=
+      blocosB.length
     ) {
 
       adicionarComparacao(
@@ -412,27 +680,19 @@ function criarComparacoes() {
 
 
     /*
-      ==========================
-      PARÁGRAFOS DIVIDIDOS
-      ==========================
-
-      Exemplo:
-
-      A:
-      [parágrafo grande]
-
-      B:
-      [metade]
-      [outra metade]
-
-      Testamos até 3 parágrafos.
+    ================================
+    TESTAR 1 A ↔ VÁRIOS B
+    ================================
     */
 
-
     let melhorDivisaoB = {
-      quantidade: 1,
+
+      quantidade:
+        1,
+
       similaridade:
         similaridadeAtual
+
     };
 
 
@@ -446,7 +706,9 @@ function criarComparacoes() {
         indiceB + quantidade >
         blocosB.length
       ) {
+
         break;
+
       }
 
 
@@ -471,8 +733,12 @@ function criarComparacoes() {
       ) {
 
         melhorDivisaoB = {
+
           quantidade,
-          similaridade: score
+
+          similaridade:
+            score
+
         };
 
       }
@@ -481,16 +747,19 @@ function criarComparacoes() {
 
 
     /*
-      O contrário:
-
-      A tem 2 ou 3 parágrafos
-      equivalentes a 1 do B.
+    ================================
+    TESTAR VÁRIOS A ↔ 1 B
+    ================================
     */
 
     let melhorDivisaoA = {
-      quantidade: 1,
+
+      quantidade:
+        1,
+
       similaridade:
         similaridadeAtual
+
     };
 
 
@@ -504,7 +773,9 @@ function criarComparacoes() {
         indiceA + quantidade >
         blocosA.length
       ) {
+
         break;
+
       }
 
 
@@ -529,8 +800,12 @@ function criarComparacoes() {
       ) {
 
         melhorDivisaoA = {
+
           quantidade,
-          similaridade: score
+
+          similaridade:
+            score
+
         };
 
       }
@@ -539,9 +814,8 @@ function criarComparacoes() {
 
 
     /*
-      Só juntamos os parágrafos
-      se a melhora for realmente
-      significativa.
+    Só junta vários parágrafos
+    quando a melhoria for relevante.
     */
 
     const usarDivisaoB =
@@ -563,6 +837,11 @@ function criarComparacoes() {
       usarDivisaoB
     ) {
 
+
+      /*
+      B tem vários parágrafos
+      correspondendo a um do A.
+      */
 
       if (
         usarDivisaoB &&
@@ -589,13 +868,20 @@ function criarComparacoes() {
 
         indiceA++;
 
+
         indiceB +=
           melhorDivisaoB.quantidade;
+
 
         continue;
 
       }
 
+
+      /*
+      A tem vários parágrafos
+      correspondendo a um do B.
+      */
 
       const combinadoA =
         juntarBlocos(
@@ -614,7 +900,9 @@ function criarComparacoes() {
       indiceA +=
         melhorDivisaoA.quantidade;
 
+
       indiceB++;
+
 
       continue;
 
@@ -622,27 +910,21 @@ function criarComparacoes() {
 
 
     /*
-      ==========================
-      PROCURA PARA FRENTE
-      ==========================
+    ================================
+    PROCURAR A MAIS PARA FRENTE EM B
+    ================================
     */
-
 
     let melhorSaltoB = {
-      distancia: 0,
+
+      distancia:
+        0,
+
       similaridade:
         similaridadeAtual
+
     };
 
-
-    /*
-      Mantemos A parado e procuramos
-      esse parágrafo mais para frente
-      no Texto B.
-
-      Isso indica que B ganhou
-      um parágrafo.
-    */
 
     for (
       let distancia = 1;
@@ -658,7 +940,9 @@ function criarComparacoes() {
         novoIndiceB >=
         blocosB.length
       ) {
+
         break;
+
       }
 
 
@@ -675,8 +959,12 @@ function criarComparacoes() {
       ) {
 
         melhorSaltoB = {
+
           distancia,
-          similaridade: score
+
+          similaridade:
+            score
+
         };
 
       }
@@ -684,21 +972,22 @@ function criarComparacoes() {
     }
 
 
+    /*
+    ================================
+    PROCURAR B MAIS PARA FRENTE EM A
+    ================================
+    */
+
     let melhorSaltoA = {
-      distancia: 0,
+
+      distancia:
+        0,
+
       similaridade:
         similaridadeAtual
+
     };
 
-
-    /*
-      Mantemos B parado e procuramos
-      esse parágrafo mais para frente
-      no Texto A.
-
-      Isso indica que A ganhou
-      um parágrafo.
-    */
 
     for (
       let distancia = 1;
@@ -714,7 +1003,9 @@ function criarComparacoes() {
         novoIndiceA >=
         blocosA.length
       ) {
+
         break;
+
       }
 
 
@@ -731,8 +1022,12 @@ function criarComparacoes() {
       ) {
 
         melhorSaltoA = {
+
           distancia,
-          similaridade: score
+
+          similaridade:
+            score
+
         };
 
       }
@@ -759,11 +1054,9 @@ function criarComparacoes() {
 
 
     /*
-      B ganhou conteúdo.
-
-      Colocamos esses parágrafos como:
-
-      [sem correspondente] ↔ B
+    ================================
+    B POSSUI PARÁGRAFOS EXTRAS
+    ================================
     */
 
     if (
@@ -786,6 +1079,7 @@ function criarComparacoes() {
           blocosB[indiceB]
         );
 
+
         indiceB++;
 
       }
@@ -797,7 +1091,9 @@ function criarComparacoes() {
 
 
     /*
-      A ganhou conteúdo.
+    ================================
+    A POSSUI PARÁGRAFOS EXTRAS
+    ================================
     */
 
     if (
@@ -815,6 +1111,7 @@ function criarComparacoes() {
           ""
         );
 
+
         indiceA++;
 
       }
@@ -826,13 +1123,9 @@ function criarComparacoes() {
 
 
     /*
-      Não encontramos nenhum indício
-      forte de deslocamento.
-
-      Consideramos então que os dois
-      parágrafos correspondem entre si,
-      mesmo que tenham sido bastante
-      reescritos.
+    ================================
+    COMPARAÇÃO NORMAL
+    ================================
     */
 
     adicionarComparacao(
@@ -848,98 +1141,12 @@ function criarComparacoes() {
 
 }
 
-    atualizarTela();
 
-    comparador.scrollIntoView({
-      behavior: "smooth",
-      block: "start"
-    });
-
-  } catch (erro) {
-
-    console.error(erro);
-
-    alert(
-      "Não foi possível ler um dos arquivos."
-    );
-
-  }
-
-});
-
-
-function lerArquivo(arquivo) {
-
-  return new Promise((resolve, reject) => {
-
-    const leitor = new FileReader();
-
-    leitor.onload = () => {
-      resolve(leitor.result);
-    };
-
-    leitor.onerror = () => {
-      reject(leitor.error);
-    };
-
-    leitor.readAsText(
-      arquivo,
-      "UTF-8"
-    );
-
-  });
-
-}
-
-
-function dividirEmBlocos(texto) {
-
-  const textoNormalizado = texto
-    .replace(/\r\n/g, "\n")
-    .replace(/\r/g, "\n")
-    .trim();
-
-  if (!textoNormalizado) {
-    return [];
-  }
-
-  return textoNormalizado
-    .split(/\n\s*\n+/)
-    .map(bloco => bloco.trim())
-    .filter(Boolean);
-
-}
-
-
-function criarComparacoes() {
-
-  comparacoes = [];
-
-  const quantidade = Math.max(
-    blocosA.length,
-    blocosB.length
-  );
-
-  for (
-    let i = 0;
-    i < quantidade;
-    i++
-  ) {
-
-    comparacoes.push({
-
-      a: blocosA[i] || "",
-      b: blocosB[i] || "",
-
-      escolha: null,
-      textoFinal: ""
-
-    });
-
-  }
-
-}
-
+/*
+========================================
+ATUALIZAR INTERFACE
+========================================
+*/
 
 function atualizarTela() {
 
@@ -947,13 +1154,19 @@ function atualizarTela() {
     return;
   }
 
-  const trecho = comparacoes[indiceAtual];
+
+  const trecho =
+    comparacoes[indiceAtual];
+
 
   textoAElemento.textContent =
-    trecho.a || "[Sem trecho correspondente]";
+    trecho.a ||
+    "[Sem trecho correspondente]";
+
 
   textoBElemento.textContent =
-    trecho.b || "[Sem trecho correspondente]";
+    trecho.b ||
+    "[Sem trecho correspondente]";
 
 
   contador.textContent =
@@ -961,7 +1174,11 @@ function atualizarTela() {
 
 
   const porcentagem =
-    ((indiceAtual + 1) / comparacoes.length) * 100;
+    (
+      (indiceAtual + 1) /
+      comparacoes.length
+    ) * 100;
+
 
   progresso.style.width =
     `${porcentagem}%`;
@@ -970,8 +1187,10 @@ function atualizarTela() {
   anterior.disabled =
     indiceAtual === 0;
 
+
   proximo.textContent =
-    indiceAtual === comparacoes.length - 1
+    indiceAtual ===
+    comparacoes.length - 1
       ? "Fim"
       : "Próximo →";
 
@@ -979,46 +1198,72 @@ function atualizarTela() {
   removerSelecoesVisuais();
 
 
-  if (trecho.escolha === "a") {
+  if (
+    trecho.escolha === "a"
+  ) {
 
-    cardA.classList.add("selecionado");
-
-  }
-
-
-  if (trecho.escolha === "b") {
-
-    cardB.classList.add("selecionado");
+    cardA.classList.add(
+      "selecionado"
+    );
 
   }
 
 
-  if (trecho.escolha === "ambos") {
+  if (
+    trecho.escolha === "b"
+  ) {
 
-    usarAmbos.classList.add("selecionado");
-
-  }
-
-
-  if (trecho.escolha === "ignorar") {
-
-    ignorarTrecho.classList.add("selecionado");
+    cardB.classList.add(
+      "selecionado"
+    );
 
   }
 
 
-  if (trecho.escolha === "editar") {
+  if (
+    trecho.escolha === "ambos"
+  ) {
 
-    editarTrecho.classList.add("selecionado");
+    usarAmbos.classList.add(
+      "selecionado"
+    );
 
-    editorArea.classList.remove("escondido");
+  }
+
+
+  if (
+    trecho.escolha === "ignorar"
+  ) {
+
+    ignorarTrecho.classList.add(
+      "selecionado"
+    );
+
+  }
+
+
+  if (
+    trecho.escolha === "editar"
+  ) {
+
+    editarTrecho.classList.add(
+      "selecionado"
+    );
+
+
+    editorArea.classList.remove(
+      "escondido"
+    );
+
 
     editorTexto.value =
       trecho.textoFinal;
 
   } else {
 
-    editorArea.classList.add("escondido");
+    editorArea.classList.add(
+      "escondido"
+    );
 
   }
 
@@ -1028,83 +1273,164 @@ function atualizarTela() {
 }
 
 
+/*
+========================================
+REMOVER MARCAÇÕES
+========================================
+*/
+
 function removerSelecoesVisuais() {
 
-  cardA.classList.remove("selecionado");
-  cardB.classList.remove("selecionado");
+  cardA.classList.remove(
+    "selecionado"
+  );
 
-  usarAmbos.classList.remove("selecionado");
-  editarTrecho.classList.remove("selecionado");
-  ignorarTrecho.classList.remove("selecionado");
+  cardB.classList.remove(
+    "selecionado"
+  );
+
+
+  usarAmbos.classList.remove(
+    "selecionado"
+  );
+
+  editarTrecho.classList.remove(
+    "selecionado"
+  );
+
+  ignorarTrecho.classList.remove(
+    "selecionado"
+  );
 
 }
 
+
+/*
+========================================
+ESCOLHER A
+========================================
+*/
 
 usarA.addEventListener("click", () => {
 
   const trecho =
     comparacoes[indiceAtual];
 
-  trecho.escolha = "a";
-  trecho.textoFinal = trecho.a;
+
+  trecho.escolha =
+    "a";
+
+
+  trecho.textoFinal =
+    trecho.a;
+
 
   atualizarTela();
 
 });
 
+
+/*
+========================================
+ESCOLHER B
+========================================
+*/
 
 usarB.addEventListener("click", () => {
 
   const trecho =
     comparacoes[indiceAtual];
 
-  trecho.escolha = "b";
-  trecho.textoFinal = trecho.b;
+
+  trecho.escolha =
+    "b";
+
+
+  trecho.textoFinal =
+    trecho.b;
+
 
   atualizarTela();
 
 });
 
+
+/*
+========================================
+ESCOLHER AMBOS
+========================================
+*/
 
 usarAmbos.addEventListener("click", () => {
 
   const trecho =
     comparacoes[indiceAtual];
 
-  trecho.escolha = "ambos";
+
+  trecho.escolha =
+    "ambos";
 
 
   const partes = [];
 
+
   if (trecho.a) {
-    partes.push(trecho.a);
+
+    partes.push(
+      trecho.a
+    );
+
   }
 
+
   if (trecho.b) {
-    partes.push(trecho.b);
+
+    partes.push(
+      trecho.b
+    );
+
   }
 
 
   trecho.textoFinal =
     partes.join("\n\n");
 
+
   atualizarTela();
 
 });
 
+
+/*
+========================================
+IGNORAR
+========================================
+*/
 
 ignorarTrecho.addEventListener("click", () => {
 
   const trecho =
     comparacoes[indiceAtual];
 
-  trecho.escolha = "ignorar";
-  trecho.textoFinal = "";
+
+  trecho.escolha =
+    "ignorar";
+
+
+  trecho.textoFinal =
+    "";
+
 
   atualizarTela();
 
 });
 
+
+/*
+========================================
+EDITAR
+========================================
+*/
 
 editarTrecho.addEventListener("click", () => {
 
@@ -1118,12 +1444,17 @@ editarTrecho.addEventListener("click", () => {
 
     let textoInicial = "";
 
-    if (trecho.textoFinal) {
+
+    if (
+      trecho.textoFinal
+    ) {
 
       textoInicial =
         trecho.textoFinal;
 
-    } else if (trecho.a) {
+    } else if (
+      trecho.a
+    ) {
 
       textoInicial =
         trecho.a;
@@ -1142,52 +1473,86 @@ editarTrecho.addEventListener("click", () => {
   }
 
 
-  trecho.escolha = "editar";
+  trecho.escolha =
+    "editar";
+
 
   removerSelecoesVisuais();
+
 
   editarTrecho.classList.add(
     "selecionado"
   );
 
+
   editorArea.classList.remove(
     "escondido"
   );
+
 
   editorTexto.focus();
 
 });
 
 
+/*
+========================================
+SALVAR EDIÇÃO
+========================================
+*/
+
 salvarEdicao.addEventListener("click", () => {
 
   const trecho =
     comparacoes[indiceAtual];
 
-  trecho.escolha = "editar";
+
+  trecho.escolha =
+    "editar";
+
 
   trecho.textoFinal =
     editorTexto.value.trim();
+
 
   atualizarTela();
 
 });
 
 
+/*
+========================================
+ANTERIOR
+========================================
+*/
+
 anterior.addEventListener("click", () => {
 
-  if (indiceAtual <= 0) {
+  if (
+    indiceAtual <= 0
+  ) {
+
     return;
+
   }
+
 
   indiceAtual--;
 
+
   atualizarTela();
+
 
   rolarParaComparacao();
 
 });
 
+
+/*
+========================================
+PRÓXIMO
+========================================
+*/
 
 proximo.addEventListener("click", () => {
 
@@ -1198,9 +1563,12 @@ proximo.addEventListener("click", () => {
 
     indiceAtual++;
 
+
     atualizarTela();
 
+
     rolarParaComparacao();
+
 
     return;
 
@@ -1208,7 +1576,9 @@ proximo.addEventListener("click", () => {
 
 
   document
-    .querySelector(".resultado")
+    .querySelector(
+      ".resultado"
+    )
     .scrollIntoView({
       behavior: "smooth"
     });
@@ -1226,17 +1596,25 @@ function rolarParaComparacao() {
 }
 
 
+/*
+========================================
+TEXTO C
+========================================
+*/
+
 function atualizarTextoC() {
 
   const textosEscolhidos =
     comparacoes
-      .filter(item =>
-        item.escolha &&
-        item.escolha !== "ignorar" &&
-        item.textoFinal
+      .filter(
+        item =>
+          item.escolha &&
+          item.escolha !== "ignorar" &&
+          item.textoFinal
       )
-      .map(item =>
-        item.textoFinal.trim()
+      .map(
+        item =>
+          item.textoFinal.trim()
       );
 
 
@@ -1248,7 +1626,8 @@ function atualizarTextoC() {
 
   const quantidade =
     comparacoes.filter(
-      item => item.escolha !== null
+      item =>
+        item.escolha !== null
     ).length;
 
 
@@ -1257,6 +1636,12 @@ function atualizarTextoC() {
 
 }
 
+
+/*
+========================================
+BAIXAR TXT
+========================================
+*/
 
 baixarTxt.addEventListener("click", () => {
 
@@ -1286,29 +1671,48 @@ baixarTxt.addEventListener("click", () => {
 
 
   const url =
-    URL.createObjectURL(blob);
+    URL.createObjectURL(
+      blob
+    );
 
 
   const link =
-    document.createElement("a");
+    document.createElement(
+      "a"
+    );
 
-  link.href = url;
+
+  link.href =
+    url;
+
 
   link.download =
     "Texto-C.txt";
 
 
-  document.body.appendChild(link);
+  document.body.appendChild(
+    link
+  );
+
 
   link.click();
+
 
   link.remove();
 
 
-  URL.revokeObjectURL(url);
+  URL.revokeObjectURL(
+    url
+  );
 
 });
 
+
+/*
+========================================
+REINICIAR
+========================================
+*/
 
 botaoReiniciar.addEventListener("click", () => {
 
@@ -1324,12 +1728,29 @@ botaoReiniciar.addEventListener("click", () => {
 
 
   comparacoes = [];
+
   blocosA = [];
   blocosB = [];
 
   indiceAtual = 0;
 
-  textoC.value = "";
+
+  textoC.value =
+    "";
+
+
+  quantidadeEscolhida.textContent =
+    "0 trechos escolhidos";
+
+
+  editorTexto.value =
+    "";
+
+
+  editorArea.classList.add(
+    "escondido"
+  );
+
 
   comparador.classList.add(
     "escondido"
